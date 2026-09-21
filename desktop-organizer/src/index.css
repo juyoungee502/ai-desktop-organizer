@@ -648,6 +648,71 @@ button, input, select {
   columns: 2;
 }
 
+/* Folder tree ----------------------------------------------------------- */
+
+.folder-tree {
+  font-size: 12.5px;
+}
+
+.tree-node {
+  margin-left: 4px;
+}
+
+.tree-node summary {
+  cursor: pointer;
+}
+
+.tree-summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 2px;
+  border-radius: 6px;
+  list-style: none;
+}
+
+.tree-summary::-webkit-details-marker {
+  display: none;
+}
+
+.tree-summary:hover {
+  background: var(--bg-2);
+}
+
+.tree-name {
+  font-weight: 600;
+}
+
+.tree-count {
+  color: var(--text-2);
+  font-size: 11px;
+}
+
+.tree-children {
+  margin-left: 20px;
+  padding-left: 10px;
+  border-left: 1px dashed var(--border);
+}
+
+.tree-file {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 2px;
+  color: var(--text-1);
+}
+
+.tree-node--kept {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+}
+
+.preview-detail-table summary {
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
 /* History ---------------------------------------------------------------- */
 
 .history-view {
@@ -735,6 +800,27 @@ button, input, select {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  margin-bottom: 8px;
+}
+
+.settings-number {
+  width: 70px;
+  text-align: right;
+}
+
+.settings-section code {
+  background: var(--bg-3);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-family: Consolas, monospace;
+  font-size: 11px;
 }
 
 /* State panels -------------------------------------------------------- */

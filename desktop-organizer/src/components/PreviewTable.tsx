@@ -1,4 +1,5 @@
 import { categoryMeta, type DesktopEntry, type OrganizePreview } from "../lib/types";
+import { FolderTree } from "./FolderTree";
 
 interface PreviewTableProps {
   preview: OrganizePreview;
@@ -25,17 +26,13 @@ export function PreviewTable({ preview, entriesById, selectedId, onSelect, onExe
         </button>
       </div>
 
-      {preview.foldersToCreate.length > 0 && (
-        <div className="folder-preview">
-          <span className="folder-preview-title">새로 생성될 폴더</span>
-          <ul>
-            {preview.foldersToCreate.map((f) => (
-              <li key={f}>{f}</li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <div className="folder-preview">
+        <span className="folder-preview-title">정리 후 폴더 구조 미리보기 (폴더/파일을 눌러서 펼쳐보세요)</span>
+        <FolderTree preview={preview} entriesById={entriesById} />
+      </div>
 
+      <details className="preview-detail-table">
+        <summary className="folder-preview-title">상세 목록 (파일별 이동 경로 표로 보기)</summary>
       <div className="file-table-wrap">
         <table className="file-table">
           <thead>
@@ -75,6 +72,7 @@ export function PreviewTable({ preview, entriesById, selectedId, onSelect, onExe
           </tbody>
         </table>
       </div>
+      </details>
     </div>
   );
 }

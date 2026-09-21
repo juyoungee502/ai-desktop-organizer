@@ -16,6 +16,10 @@ export interface UserOverride {
   keepOnDesktop?: boolean;
 }
 
+export interface BuildPreviewOptions {
+  groupProjectsIntoSubfolders?: boolean;
+}
+
 function joinPath(desktopPath: string, ...segments: string[]): string {
   const sep = desktopPath.includes("\\") ? "\\" : "/";
   return [desktopPath, ...segments].join(sep);
@@ -29,8 +33,10 @@ function joinPath(desktopPath: string, ...segments: string[]): string {
 export function buildPreview(
   classified: ClassifiedEntry[],
   overrides: Map<string, UserOverride>,
-  desktopPath: string
+  desktopPath: string,
+  options: BuildPreviewOptions = {}
 ): OrganizePreview {
+  const groupProjectsIntoSubfolders = options.groupProjectsIntoSubfolders ?? false;
   const usedDestinationPaths = new Set<string>();
   const items: PlanItem[] = [];
   const foldersToCreate = new Set<string>();
@@ -43,9 +49,10 @@ export function buildPreview(
 
     const meta = categoryMeta(category);
     const sep = desktopPath.includes("\\") ? "\\" : "/";
-    // All project files land directly in one "01_프로젝트" folder rather than
-    // a separate subfolder per project name - fewer folders on the desktop.
     const segments = [ORGANIZED_ROOT_FOLDER, meta.folderName];
+    if (groupProjectsIntoSubfolders && category === "project" && result.projectGroup) {
+      segments.push(sanitizeFolderName(result.projectGroup));
+    }
     const destinationFolder = segments.join(sep);
 
     let candidateName = entry.name;

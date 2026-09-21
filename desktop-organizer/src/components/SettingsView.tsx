@@ -1,5 +1,5 @@
-import { OLD_FILE_THRESHOLD_DAYS, REVIEW_CONFIDENCE_THRESHOLD } from "../lib/classify";
 import type { BackendMode } from "../lib/types";
+import type { OrganizerSettings } from "../lib/settings";
 import type { SimulatedState } from "../App";
 
 interface SettingsViewProps {
@@ -7,6 +7,8 @@ interface SettingsViewProps {
   onResetOverrides: () => void;
   simulatedState: SimulatedState;
   onSimulatedStateChange: (state: SimulatedState) => void;
+  settings: OrganizerSettings;
+  onSettingsChange: (partial: Partial<OrganizerSettings>) => void;
 }
 
 const SIMULATION_OPTIONS: { value: SimulatedState; label: string }[] = [
@@ -17,7 +19,14 @@ const SIMULATION_OPTIONS: { value: SimulatedState; label: string }[] = [
   { value: "permission", label: "권한 부족 상태" },
 ];
 
-export function SettingsView({ backendMode, onResetOverrides, simulatedState, onSimulatedStateChange }: SettingsViewProps) {
+export function SettingsView({
+  backendMode,
+  onResetOverrides,
+  simulatedState,
+  onSimulatedStateChange,
+  settings,
+  onSettingsChange,
+}: SettingsViewProps) {
   return (
     <div className="settings-view">
       <section className="settings-section">
@@ -31,11 +40,53 @@ export function SettingsView({ backendMode, onResetOverrides, simulatedState, on
       </section>
 
       <section className="settings-section">
+        <h3>정리 방식</h3>
+        <label className="checkbox-label settings-row">
+          <input
+            type="checkbox"
+            checked={settings.groupProjectsIntoSubfolders}
+            onChange={(e) => onSettingsChange({ groupProjectsIntoSubfolders: e.target.checked })}
+          />
+          프로젝트 파일을 이름별로 세부 폴더로 나누기 (ALT, tayo, dream ...)
+        </label>
+        <p className="settings-note">
+          체크 해제 시 "프로젝트"로 분류된 파일이 모두 <code>01_프로젝트</code> 폴더 하나에 모입니다.
+          체크하면 이전처럼 프로젝트 이름별로 하위 폴더가 따로 생깁니다. 변경하면 "정리 미리보기"에
+          바로 반영됩니다.
+        </p>
+      </section>
+
+      <section className="settings-section">
         <h3>분류 규칙 기준값</h3>
-        <ul className="settings-list">
-          <li>검토 필요 기준 확신도: {Math.round(REVIEW_CONFIDENCE_THRESHOLD * 100)}% 미만이면 "분류 보류"로 표시됩니다.</li>
-          <li>오래된 파일 기준: 최근 {OLD_FILE_THRESHOLD_DAYS}일 이상 수정되지 않은 파일입니다.</li>
-        </ul>
+        <label className="settings-row">
+          검토 필요 기준 확신도:
+          <input
+            type="number"
+            min={0}
+            max={100}
+            className="text-input settings-number"
+            value={settings.reviewConfidencePercent}
+            onChange={(e) => {
+              const value = Number(e.target.value);
+              if (!Number.isNaN(value)) onSettingsChange({ reviewConfidencePercent: Math.min(100, Math.max(0, value)) });
+            }}
+          />
+          % 미만이면 "분류 보류"로 표시
+        </label>
+        <label className="settings-row">
+          오래된 파일 기준:
+          <input
+            type="number"
+            min={1}
+            className="text-input settings-number"
+            value={settings.oldFileThresholdDays}
+            onChange={(e) => {
+              const value = Number(e.target.value);
+              if (!Number.isNaN(value) && value > 0) onSettingsChange({ oldFileThresholdDays: value });
+            }}
+          />
+          일 이상 수정 안 되면 "오래됨"으로 표시
+        </label>
       </section>
 
       <section className="settings-section">

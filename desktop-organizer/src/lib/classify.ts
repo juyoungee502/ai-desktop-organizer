@@ -246,7 +246,18 @@ function classifyBase(entry: DesktopEntry): BaseGuess {
 // Public API
 // ---------------------------------------------------------------------------
 
-export function classifyEntries(entries: DesktopEntry[]): ClassifiedEntry[] {
+export interface ClassifyOptions {
+  reviewConfidenceThreshold?: number;
+  oldFileThresholdDays?: number;
+}
+
+export function classifyEntries(
+  entries: DesktopEntry[],
+  options: ClassifyOptions = {}
+): ClassifiedEntry[] {
+  const reviewConfidenceThreshold = options.reviewConfidenceThreshold ?? REVIEW_CONFIDENCE_THRESHOLD;
+  const oldFileThresholdDays = options.oldFileThresholdDays ?? OLD_FILE_THRESHOLD_DAYS;
+
   const prefixGroups = buildPrefixGroups(entries);
   const entryToGroup = new Map<string, PrefixGroup>();
   for (const group of prefixGroups.values()) {
@@ -290,9 +301,9 @@ export function classifyEntries(entries: DesktopEntry[]): ClassifiedEntry[] {
       reasons.push("동일한 이름/크기를 가진 중복 파일 후보입니다.");
     }
 
-    const isOldFileCandidate = !entry.isDirectory && daysSince(entry.modifiedAt) > OLD_FILE_THRESHOLD_DAYS;
+    const isOldFileCandidate = !entry.isDirectory && daysSince(entry.modifiedAt) > oldFileThresholdDays;
     if (isOldFileCandidate) {
-      reasons.push(`${OLD_FILE_THRESHOLD_DAYS}일 이상 수정되지 않은 오래된 파일입니다.`);
+      reasons.push(`${oldFileThresholdDays}일 이상 수정되지 않은 오래된 파일입니다.`);
     }
 
     const isLatestVersion = latestVersionMap.get(entry.id) ?? true;
@@ -300,7 +311,7 @@ export function classifyEntries(entries: DesktopEntry[]): ClassifiedEntry[] {
       reasons.push("같은 파일의 더 최신/최종 버전이 존재합니다.");
     }
 
-    let needsReview = confidence < REVIEW_CONFIDENCE_THRESHOLD;
+    let needsReview = confidence < reviewConfidenceThreshold;
     if (needsReview && category !== "uncategorized") {
       reasons.push("분류 확신도가 낮아 자동 이동 대상에서 제외하고 검토 필요로 표시합니다.");
       category = "uncategorized";

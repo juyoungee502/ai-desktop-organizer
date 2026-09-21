@@ -3,6 +3,7 @@ import { api, backendMode } from "./lib/api";
 import { classifyEntries } from "./lib/classify";
 import { buildPreview, type UserOverride } from "./lib/plan";
 import { errorMessage, isPermissionError } from "./lib/errors";
+import { DEFAULT_SETTINGS, loadSettings, saveSettings, type OrganizerSettings } from "./lib/settings";
 import type {
   CategoryId,
   ClassifiedEntry,
@@ -26,9 +27,21 @@ export type SimulatedState = "none" | "loading" | "empty" | "error" | "permissio
 export default function App() {
   const [menu, setMenu] = useState<MenuKey>("scan");
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
-  const [classified, setClassified] = useState<ClassifiedEntry[]>([]);
   const [overrides, setOverrides] = useState<Map<string, UserOverride>>(new Map());
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [settings, setSettings] = useState<OrganizerSettings>(DEFAULT_SETTINGS);
+
+  useEffect(() => {
+    setSettings(loadSettings());
+  }, []);
+
+  const handleSettingsChange = useCallback((partial: Partial<OrganizerSettings>) => {
+    setSettings((prev) => {
+      const next = { ...prev, ...partial };
+      saveSettings(next);
+      return next;
+    });
+  }, []);
 
   const [scanning, setScanning] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
@@ -63,7 +76,6 @@ export default function App() {
     try {
       const result = await api.scanDesktop();
       setScanResult(result);
-      setClassified(classifyEntries(result.entries));
       const validIds = new Set(result.entries.map((e) => e.id));
       setOverrides((prev) => {
         if (!preserveOverrides) return new Map();
@@ -117,10 +129,20 @@ export default function App() {
     setOverrides(new Map());
   }, []);
 
+  const classified = useMemo(() => {
+    if (!scanResult) return [];
+    return classifyEntries(scanResult.entries, {
+      reviewConfidenceThreshold: settings.reviewConfidencePercent / 100,
+      oldFileThresholdDays: settings.oldFileThresholdDays,
+    });
+  }, [scanResult, settings.reviewConfidencePercent, settings.oldFileThresholdDays]);
+
   const preview = useMemo(() => {
     if (!scanResult) return null;
-    return buildPreview(classified, overrides, scanResult.desktopPath);
-  }, [classified, overrides, scanResult]);
+    return buildPreview(classified, overrides, scanResult.desktopPath, {
+      groupProjectsIntoSubfolders: settings.groupProjectsIntoSubfolders,
+    });
+  }, [classified, overrides, scanResult, settings.groupProjectsIntoSubfolders]);
 
   const entriesById = useMemo(() => {
     const map = new Map(classified.map((c) => [c.entry.id, c.entry]));
@@ -231,6 +253,8 @@ export default function App() {
                 onResetOverrides={handleResetOverrides}
                 simulatedState={simulatedState}
                 onSimulatedStateChange={setSimulatedState}
+                settings={settings}
+                onSettingsChange={handleSettingsChange}
               />
             )}
           </main>
