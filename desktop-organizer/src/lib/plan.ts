@@ -43,10 +43,9 @@ export function buildPreview(
 
     const meta = categoryMeta(category);
     const sep = desktopPath.includes("\\") ? "\\" : "/";
+    // All project files land directly in one "01_프로젝트" folder rather than
+    // a separate subfolder per project name - fewer folders on the desktop.
     const segments = [ORGANIZED_ROOT_FOLDER, meta.folderName];
-    if (category === "project" && result.projectGroup) {
-      segments.push(sanitizeFolderName(result.projectGroup));
-    }
     const destinationFolder = segments.join(sep);
 
     let candidateName = entry.name;
